@@ -14,13 +14,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
@@ -31,6 +34,7 @@ import javax.swing.text.JTextComponent;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.mozilla.universalchardet.UniversalDetector;
+import javax.swing.JTable;
 public class MainWindow extends JFrame {
 
 	/**
@@ -39,6 +43,7 @@ public class MainWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
+	private JTable table;
 
 	/**
 	 * Launch the application.
@@ -70,6 +75,34 @@ public class MainWindow extends JFrame {
 		Controlador_pestanias_archivos fileActions = new Controlador_pestanias_archivos();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 707, 412);
+		
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		
+		JButton btnNewButton = new JButton("A.L.");
+		btnNewButton.setEnabled(false);
+		btnNewButton.setToolTipText("Analizador L\u00E9xico");
+		menuBar.add(btnNewButton);
+		
+		JButton btnAnalizadorSintctico = new JButton("A. S.");
+		btnAnalizadorSintctico.setEnabled(false);
+		btnAnalizadorSintctico.setToolTipText("Analizador Sint\u00E1ctico");
+		menuBar.add(btnAnalizadorSintctico);
+		
+		JButton btnAse = new JButton("A.Se.");
+		btnAse.setEnabled(false);
+		btnAse.setToolTipText("Analizador Sem\u00E1ntico");
+		menuBar.add(btnAse);
+		
+		JButton btnGi = new JButton("G.I.");
+		btnGi.setEnabled(false);
+		btnGi.setToolTipText("Generaci\u00F3n Intermedia");
+		menuBar.add(btnGi);
+		
+		JButton btnNewButton_1 = new JButton("Ejecuci\u00F3n");
+		btnNewButton_1.setEnabled(false);
+		btnNewButton_1.setToolTipText("Ejecuci\u00F3n");
+		menuBar.add(btnNewButton_1);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -79,7 +112,6 @@ public class MainWindow extends JFrame {
 		contentPane.add(toolBar, BorderLayout.NORTH);
 		
 		JButton btnNuevo = new JButton("Nuevo");
-		btnNuevo.setEnabled(false);
 		
 		JButton btnAbrir = new JButton("Abrir");
 		btnAbrir.addActionListener(fileActions::accion_abrir_archivo);
@@ -87,7 +119,7 @@ public class MainWindow extends JFrame {
 		toolBar.add(btnAbrir);
 		btnNuevo.setToolTipText("Abrir...");
 		btnNuevo.setIcon(new ImageIcon(MainWindow.class.getResource("/com/sun/java/swing/plaf/windows/icons/File.gif")));
-		btnNuevo.addActionListener(fileActions::accion_abrir_archivo);
+		btnNuevo.addActionListener(fileActions::accion_nuevo_archivo);
 		toolBar.add(btnNuevo);
 		
 		JButton btnGuardar = new JButton("Guardar");
@@ -102,11 +134,20 @@ public class MainWindow extends JFrame {
 		btnGuardarComo.setToolTipText("Guardar como...");
 		toolBar.add(btnGuardarComo);
 		
+		JSplitPane panel = new JSplitPane();
+		panel.setResizeWeight(1.0);
+		panel.setOneTouchExpandable(true);
+		panel.setOrientation(JSplitPane.VERTICAL_SPLIT);
+		contentPane.add(panel);
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		contentPane.add(tabbedPane, BorderLayout.CENTER);
-				
+		panel.setLeftComponent(tabbedPane);
+		
 		JScrollPane scrollPane = new JScrollPane();
-		contentPane.add(scrollPane, BorderLayout.SOUTH);
+		panel.setRightComponent(scrollPane);
+		
+		table = new JTable();
+		scrollPane.setViewportView(table);
+		
 	}
 	
 	
@@ -154,8 +195,8 @@ public class MainWindow extends JFrame {
 		}
 		private void modifica_pestana_archivo(Path old_path,Path new_path)
 		{
-			file_to_component.put(new_path,file_to_component.get(old_path));
-			file_to_component.remove(old_path);
+			file_to_component.put(new_path,(RTextScrollPane) tabbedPane.getSelectedComponent());
+			if(old_path!=null)file_to_component.remove(old_path);
 			tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(),new_path.getFileName().toString());
 		}
 		public void accion_abrir_archivo(ActionEvent e)
@@ -193,8 +234,6 @@ public class MainWindow extends JFrame {
 				}
 			}
 		}
-
-		/**/
 		public void accion_guardar_archivo(ActionEvent e)
 		{
 			if(tabbedPane.getSelectedIndex()>=0)
@@ -215,6 +254,12 @@ public class MainWindow extends JFrame {
 					guardar_como();
 				}
 			}
+		}
+		public void accion_nuevo_archivo(ActionEvent e)
+		{
+			RSyntaxTextArea textArea = new RSyntaxTextArea();
+			RTextScrollPane sp= new RTextScrollPane(textArea);
+			tabbedPane.add("Nuevo", sp);
 		}
 	}
 	
