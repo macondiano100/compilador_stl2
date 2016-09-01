@@ -7,11 +7,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Vector;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -36,7 +36,6 @@ public class MainWindow extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private RSyntaxTextArea textArea;
 	private JTabbedPane tabbedPane;
 
 	/**
@@ -90,25 +89,20 @@ public class MainWindow extends JFrame {
 		toolBar.add(btnNuevo);
 		
 		JButton btnGuardar = new JButton("Guardar");
-		btnGuardar.addActionListener(fileActions::accion_guardar_archivo);
+		//btnGuardar.addActionListener(fileActions::accion_guardar_archivo);
 		btnGuardar.setIcon(new ImageIcon(MainWindow.class.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
 		btnGuardar.setToolTipText("Guardar");
 		toolBar.add(btnGuardar);
 		
 		JButton btnGuardarComo = new JButton("Guardar como ....");
-		btnGuardarComo.addActionListener(fileActions::accion_guardar_como);
+		//btnGuardarComo.addActionListener(fileActions::accion_guardar_como);
 		btnGuardarComo.setIcon(new ImageIcon(MainWindow.class.getResource("/javax/swing/plaf/metal/icons/ocean/floppy.gif")));
 		btnGuardarComo.setToolTipText("Guardar como...");
 		toolBar.add(btnGuardarComo);
 		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		contentPane.add(tabbedPane, BorderLayout.CENTER);
-		
-		textArea = new RSyntaxTextArea();
-		textArea.setPopupMenu(null);
-		RTextScrollPane sp = new RTextScrollPane(textArea);
-		tabbedPane.addTab("Nuevo Archivo", null, sp, null);
-		
+				
 		JScrollPane scrollPane = new JScrollPane();
 		contentPane.add(scrollPane, BorderLayout.SOUTH);
 	}
@@ -119,46 +113,58 @@ public class MainWindow extends JFrame {
 	//Acciones
 	private class FileActions
 	{
-		private Path opened_file;
-		private void set_opened_file(Path p)
+		private Vector<Path> opened_files=new Vector<Path>();
+		private void add_opened_file(File f)
+		{
+						
+			UniversalDetector detector= new UniversalDetector(null);			
+			try(FileInputStream fis= new FileInputStream(f))
+			{
+				int nread;
+				byte[] buf = new byte[4096];
+				while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
+				  detector.handleData(buf, 0, nread);
+				}
+				detector.dataEnd();
+			} catch (IOException e3 ) {
+				e3.printStackTrace();
+			}
+			String charsetName = detector.getDetectedCharset()==null ?  "UTF-8":detector.getDetectedCharset();
+			try(BufferedReader reader=Files.newBufferedReader(f.toPath(),Charset.forName(charsetName)))
+			{
+				Path p = f.toPath();
+				opened_files.add(p);
+				RSyntaxTextArea textArea = new RSyntaxTextArea();
+				textArea.setPopupMenu(null);
+				RTextScrollPane sp = new RTextScrollPane(textArea);
+				tabbedPane.addTab(p.getFileName().toString(),sp);
+				textArea.read(reader,f);
+			}
+			catch (MalformedInputException e2) {
+				JOptionPane.showMessageDialog(MainWindow.this,"Error de encoding","Error al Abrir Archivo",JOptionPane.ERROR_MESSAGE);
+			}
+			catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+		}
+		/*private void set_opened_file(Path p)
 		{
 			opened_file = p;
 			tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(),p.getFileName().toString());
 			
-		}
+		}*/
 		private void accion_abrir_archivo(ActionEvent e)
 		{
 			JFileChooser file_chooser = new JFileChooser();
 			file_chooser.showOpenDialog(MainWindow.this);
 			File selected_file =file_chooser.getSelectedFile();
 			if(selected_file != null){
-				set_opened_file(selected_file.toPath());
-				UniversalDetector detector= new UniversalDetector(null);
-				try(FileInputStream fis= new FileInputStream(selected_file))
-				{
-					int nread;
-					byte[] buf = new byte[4096];
-					while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
-					  detector.handleData(buf, 0, nread);
-					}
-					detector.dataEnd();
-				} catch (IOException e3 ) {
-					e3.printStackTrace();
-				}
-				String charsetName = detector.getDetectedCharset()==null ?  "UTF-8":detector.getDetectedCharset();
-				try(BufferedReader reader=Files.newBufferedReader(selected_file.toPath(),Charset.forName(charsetName)))
-				{
-					textArea.read(reader,selected_file);
-				}
-				catch (MalformedInputException e2) {
-					JOptionPane.showMessageDialog(MainWindow.this,"Error de encoding","Error al Abrir Archivo",JOptionPane.ERROR_MESSAGE);
-				}
-				catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				add_opened_file(selected_file);
 				
 			}
 		}
+		/*
 		private void accion_guardar_como(ActionEvent e)
 		{
 			JFileChooser fileChooser = new JFileChooser();
@@ -196,6 +202,7 @@ public class MainWindow extends JFrame {
 				accion_guardar_como(e);
 			}
 		}
+		*/
 	}
 	
 }
