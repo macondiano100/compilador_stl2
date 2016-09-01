@@ -91,7 +91,7 @@ public class MainWindow extends JFrame {
 		toolBar.add(btnNuevo);
 		
 		JButton btnGuardar = new JButton("Guardar");
-		//btnGuardar.addActionListener(fileActions::accion_guardar_archivo);
+		btnGuardar.addActionListener(fileActions::accion_guardar_archivo);
 		btnGuardar.setIcon(new ImageIcon(MainWindow.class.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
 		btnGuardar.setToolTipText("Guardar");
 		toolBar.add(btnGuardar);
@@ -195,23 +195,27 @@ public class MainWindow extends JFrame {
 		}
 
 		/**/
-		/*private void accion_guardar_archivo(ActionEvent e)
+		public void accion_guardar_archivo(ActionEvent e)
 		{
-			if(file_to_component.containsValue(value))
+			if(tabbedPane.getSelectedIndex()>=0)
 			{
-				try(Writer writer = Files.newBufferedWriter(opened_file))
+				JScrollPane scrollPane =(JScrollPane) tabbedPane.getSelectedComponent();
+				if(component_to_file.containsKey(scrollPane))
 				{
-					textArea.write(writer);
-				} catch (IOException e1) {
-					JOptionPane.showMessageDialog(MainWindow.this,"Error de guardado","Error al Guardar Archivo",JOptionPane.ERROR_MESSAGE);
-					e1.printStackTrace();
+					try(Writer writer = Files.newBufferedWriter(component_to_file.get(scrollPane)))
+					{
+						((JTextComponent)scrollPane.getViewport().getView()).write(writer);
+					} catch (IOException e1) {
+						JOptionPane.showMessageDialog(MainWindow.this,"Error de guardado","Error al Guardar Archivo",JOptionPane.ERROR_MESSAGE);
+						e1.printStackTrace();
+					}
+				}
+				else
+				{
+					guardar_como();
 				}
 			}
-			else
-			{
-				accion_guardar_como(e);
-			}
-		}*/
+		}
 	}
 	
 }
