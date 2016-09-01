@@ -19,5 +19,6 @@
 			<attribute name="javadoc_location" value="jar:file:/C:/Users/Antonio/Dropbox/VII%20Semestre/Seminario%20de%20Traductores/RSyntaxTextArea-master/build/libs/rsyntaxtextarea-2.6.0-SNAPSHOT-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/Antonio/Dropbox/VII Semestre/Seminario de Traductores/juniversalchardet-1.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
